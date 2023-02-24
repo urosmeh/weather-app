@@ -1,0 +1,12 @@
+.weather-card {
+  display: flex;
+  flex-direction: row;
+  border-radius: 8px;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.15);
+  padding: 0px 10px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+}

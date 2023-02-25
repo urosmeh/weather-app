@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import classes from "./App.module.css";
-import { LastFive } from "./LastFive";
+import { WeatherList } from "./WeatherList";
 import { SearchInput } from "./SearchInput";
 import { WeatherCard } from "./WeatherCard";
 
@@ -50,7 +50,7 @@ function App() {
 
       if (!lastFive && currentWeather) {
         setLastFive([currentWeather]);
-        return;
+        return true;
       }
 
       if (lastFive && lastFive.length > 4 && currentWeather) {
@@ -60,7 +60,7 @@ function App() {
         }
         tmp.push(currentWeather);
         setLastFive(tmp);
-        return;
+        return true;
       }
 
       if (lastFive && currentWeather) {
@@ -107,7 +107,7 @@ function App() {
         <p>Try searching for city</p>
       )}
 
-      <LastFive weatherList={lastFive} onClickHandler={setClickedValue} />
+      <WeatherList weatherList={lastFive} onClickHandler={setClickedValue} />
     </div>
   );
 }

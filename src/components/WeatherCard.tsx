@@ -1,12 +1,8 @@
+import { Weather } from "../types";
 import classes from "./WeatherCard.module.css";
 
-export type WeatherCardProps = {
-  temp: number;
-  feelsLike: number;
-  humidity: number;
-  tempMin: number;
-  tempMax: number;
-  icon: string;
+export type WeatherCardProps = Weather & {
+  onClickHandler?: (e: React.MouseEvent<HTMLElement>) => void;
 };
 
 export const WeatherCard = ({
@@ -16,17 +12,23 @@ export const WeatherCard = ({
   tempMin,
   tempMax,
   icon,
+  city,
+  onClickHandler,
 }: WeatherCardProps) => {
+  const getIconLink = (icon: string) =>
+    `https://openweathermap.org/img/wn/${icon}@2x.png`;
+
   return (
-    <div className={classes["weather-card"]}>
+    <div className={classes["weather-card"]} onClick={onClickHandler}>
       <div className={classes.icon}>
-        <img src={icon} alt="weather" />
+        <h4>{city}</h4>
+        <img src={getIconLink(icon)} alt="weather" />
       </div>
       <div>
-        <p>Temperature: {temp}</p>
-        <p>Feels like: {feelsLike}</p>
-        <p>Low: {tempMin}</p>
-        <p>High: {tempMax}</p>
+        <p>Temperature: {temp} °C</p>
+        <p>Feels like: {feelsLike} °C</p>
+        <p>Low: {tempMin} °C</p>
+        <p>High: {tempMax} °C</p>
         <p>Humidity: {humidity} %</p>
       </div>
     </div>

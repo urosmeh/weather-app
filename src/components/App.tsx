@@ -1,78 +1,113 @@
 import { useEffect, useState } from "react";
 import classes from "./App.module.css";
+import { LastFive } from "./LastFive";
 import { SearchInput } from "./SearchInput";
 import { WeatherCard } from "./WeatherCard";
 
+export type Weather = {
+  feelsLike: number;
+  humidity: number;
+  temp: number;
+  tempMax: number;
+  tempMin: number;
+  icon: string;
+  city: string;
+};
+
 function App() {
-  const weatherData = {
-    temp: 306.15, //current temperature
-    feels_like: 307.15, //current temperature
-    pressure: 1013,
-    humidity: 44,
-    temp_min: 306, //min current temperature in the city
-    temp_max: 306, //max current temperature in the city
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [currentWeather, setCurrentWeather] = useState<Weather>();
+  const [lastFive, setLastFive] = useState<Weather[]>();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [clickedValue, setClickedValue] = useState(searchTerm);
+
+  useEffect(() => {
+    if (clickedValue) {
+      setSearchTerm(clickedValue);
+      getWeather(clickedValue);
+    }
+  }, [clickedValue]);
+
+  const getWeather = async (city: string) => {
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${
+        import.meta.env.VITE_OPENWEATHER_API_KEY
+      }&units=metric`
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+
+      setCurrentWeather({
+        feelsLike: data.main.feels_like,
+        humidity: data.main.humidity,
+        temp: data.main.temp,
+        tempMax: data.main.temp_max,
+        tempMin: data.main.temp_min,
+        icon: data.weather[0].icon,
+        city: data.name,
+      });
+
+      if (!lastFive && currentWeather) {
+        setLastFive([currentWeather]);
+        return;
+      }
+
+      if (lastFive && lastFive.length > 4 && currentWeather) {
+        let tmp = [];
+        for (let i = 1; i < 5; i++) {
+          tmp.push(lastFive[i]);
+        }
+        tmp.push(currentWeather);
+        setLastFive(tmp);
+        return;
+      }
+
+      if (lastFive && currentWeather) {
+        let tmp = lastFive;
+        tmp.push(currentWeather);
+        setLastFive(tmp);
+      }
+      return true;
+    } else {
+      console.log("There's been an error");
+    }
+    return false;
   };
 
-  const onSubmit = (city: string) => {
-    console.log(city);
+  const onSubmit = async (city?: string) => {
+    if (city) setSearchTerm(city);
+    setIsLoading(true);
+    await getWeather(searchTerm);
+    setSearchTerm("");
+    setIsLoading(false);
   };
 
   return (
     <div className={classes.app}>
       <h3>Weather App</h3>
-      <SearchInput onSubmit={onSubmit} />
-      <WeatherCard
-        temp={weatherData.temp}
-        feelsLike={weatherData.feels_like}
-        humidity={weatherData.humidity}
-        tempMin={weatherData.temp_min}
-        tempMax={weatherData.temp_max}
-        icon={"http://openweathermap.org/img/wn/10d@2x.png"}
+      <SearchInput
+        onSubmit={onSubmit}
+        searchTerm={searchTerm}
+        searchTermChangeHandler={setSearchTerm}
       />
+      {currentWeather && !isLoading ? (
+        <WeatherCard
+          temp={currentWeather.temp}
+          feelsLike={currentWeather.feelsLike}
+          humidity={currentWeather.humidity}
+          tempMin={currentWeather.tempMin}
+          tempMax={currentWeather.tempMax}
+          icon={currentWeather.icon}
+          city={currentWeather.city}
+        />
+      ) : isLoading ? (
+        <p>Loading...</p>
+      ) : (
+        <p>Try searching for city</p>
+      )}
 
-      <h4>Your last five search entries:</h4>
-      <div style={{ display: "flex", gap: "15px" }}>
-        <WeatherCard
-          temp={weatherData.temp}
-          feelsLike={weatherData.feels_like}
-          humidity={weatherData.humidity}
-          tempMin={weatherData.temp_min}
-          tempMax={weatherData.temp_max}
-          icon={"http://openweathermap.org/img/wn/10d@2x.png"}
-        />
-        <WeatherCard
-          temp={weatherData.temp}
-          feelsLike={weatherData.feels_like}
-          humidity={weatherData.humidity}
-          tempMin={weatherData.temp_min}
-          tempMax={weatherData.temp_max}
-          icon={"http://openweathermap.org/img/wn/10d@2x.png"}
-        />
-        <WeatherCard
-          temp={weatherData.temp}
-          feelsLike={weatherData.feels_like}
-          humidity={weatherData.humidity}
-          tempMin={weatherData.temp_min}
-          tempMax={weatherData.temp_max}
-          icon={"http://openweathermap.org/img/wn/10d@2x.png"}
-        />
-        <WeatherCard
-          temp={weatherData.temp}
-          feelsLike={weatherData.feels_like}
-          humidity={weatherData.humidity}
-          tempMin={weatherData.temp_min}
-          tempMax={weatherData.temp_max}
-          icon={"http://openweathermap.org/img/wn/10d@2x.png"}
-        />
-        <WeatherCard
-          temp={weatherData.temp}
-          feelsLike={weatherData.feels_like}
-          humidity={weatherData.humidity}
-          tempMin={weatherData.temp_min}
-          tempMax={weatherData.temp_max}
-          icon={"http://openweathermap.org/img/wn/10d@2x.png"}
-        />
-      </div>
+      <LastFive weatherList={lastFive} onClickHandler={setClickedValue} />
     </div>
   );
 }
